@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import './Contest.css';
 import styled from "styled-components";
 import Accordion from "../components/Accordion";
 import ShowVoter from './ShowVoter'
@@ -362,7 +363,7 @@ useEffect(() => {
           <Modal onClose={closeProfileModal}>
             <h3 className="text-center mb-3">Nominate Profile</h3>
             <div className="row">
-              <Table className="" striped border hover variant="dark">
+              <Table className="" striped border hover variant="dark"  responsive>
                 <thead>
                   <tr className="text-center">
                     <td>Name</td>
@@ -506,8 +507,8 @@ useEffect(() => {
         {myApiArray.map((items, index) => {
           let myUrl = items.links.website;
           return (
-            <div key={items._id}>
-              <Accordion title={items.links.name} rank={index + 1}>
+            <div key={items._id} className="gridx">
+              <Accordion className="acoordion" title={items.links.name} rank={index + 1}>
               <CgProfile className="text-info fs-2 mb-2" 
               onClick={()=>{
                 openProfileModal(items.address)
@@ -532,7 +533,7 @@ useEffect(() => {
                     <a href={items.links.website} target="_blank">
                       <FaGlobeAmericas />
                     </a>
-                    <p className="mt-3">{items.address}</p>
+                    <p className="mt-3">{items.address?.substring(0,6)+"..."+items.address?.substring(items.address?.length - 6)}</p>
                   </div>
                   <div>
                   {showButton ? (
@@ -657,6 +658,15 @@ const StyledContest = styled.main`
       &:hover {
         color: #1e78ff;
       }
+    }
+    acoordion {
+      width: 100%
+    }
+    .grid {
+      margin-top: 0.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
     }
     button {
       width: auto;

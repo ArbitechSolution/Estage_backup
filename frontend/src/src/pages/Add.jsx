@@ -9,6 +9,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {getWallet} from '../redux/actions/actions'
 import axios from "axios";
 import "./add.css"
+import Spinner from '../components/spinner/Spinner';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 
 export default function Add() {
@@ -21,6 +22,7 @@ let {acc} = useSelector(state => state.connectWallet)
   let userOpenSea = useRef("");
   let userYoutube = useRef("");
   let userTikTok = useRef("")
+  let [isLoading, setIsLoading] = useState(false);
   // let [userCycleId, setuserCycleid]=useState();
 
   let navigate = useNavigate();
@@ -36,6 +38,7 @@ let {acc} = useSelector(state => state.connectWallet)
     } else if (acc == "Connect to Rinkebey") {
       toast.error("Please Connect to Rinkeybey")
     } else {
+      setIsLoading(true)
       let web3 = window.web3;
         if (nameOfArtist.current.value !== "" && userMedium.current.value !== "" && usersWebsite.current.value !== "") {
           let contractOf = new web3.eth.Contract(contractAbi, contractAddress);
@@ -68,7 +71,7 @@ let {acc} = useSelector(state => state.connectWallet)
            await axios.post("https://defi-voting3.herokuapp.com/api/v2/nominations/add", data)
             navigate("/contest/3")
             toast.success("Transaction Confirmed");
-
+            setIsLoading(false)
           } else {
 
             minimumDaoBalance = parseInt(minimumDaoBalance);
@@ -83,6 +86,7 @@ let {acc} = useSelector(state => state.connectWallet)
     }
       }
     }catch (e) {
+      setIsLoading(false)
       console.log("Error while Nominating", e);
       toast.error("Transaction Failed")
     }
@@ -90,6 +94,11 @@ let {acc} = useSelector(state => state.connectWallet)
   return (
     <StyledAdd>
       <div className="header">
+      {
+          isLoading && (
+            <Spinner />
+          )
+        }
             <h2>
           <AiOutlineArrowLeft className="myarrowIcon" onClick={() => navigate("/")} />
                 Go to Contest

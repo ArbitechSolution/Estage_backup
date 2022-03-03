@@ -105,7 +105,7 @@ const ShowVoter = ({updated}) => {
             // ( )
           }
             <div className="header d-flex justify-content-evenly mt-5 mb-3">
-        <div className={isVote ? "btn btn-primary" : "btn btn-light"} onClick={ofVoteTable} >List of chain votes</div>
+        <div className={isVote ? "btn btn-primary" : "btn btn-light"} onClick={ofVoteTable} >List off chain votes</div>
         <div  className={isVote ? "btn btn-light" : "btn btn-primary"} onClick={onVoteTable}>List on chain votes</div>
       </div>
       {/* <div className="nominations">
@@ -121,7 +121,7 @@ const ShowVoter = ({updated}) => {
         isVote ? <>
         <div className="maindivvote">
 
-<Table className="" striped  hover bordered variant="dark">
+<Table className="" striped  hover bordered variant="dark"  responsive>
   <thead>
   <tr className="text-center">
     {/* <td>#</td> */}
@@ -167,7 +167,7 @@ const ShowVoter = ({updated}) => {
         </> : <>
         <div className="maindivvote">
 
-<Table className="" striped hover variant="dark">
+<Table className="" striped hover variant="dark"  responsive>
   <thead>
   <tr className="text-center" >
   <td>Transaction Hash</td>

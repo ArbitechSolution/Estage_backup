@@ -2,7 +2,6 @@ import React,{useEffect} from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import {useState} from "react"
-import {loadAccountAddress} from "../../src/Api/api"
 import {useSelector, useDispatch} from 'react-redux';
 import {getWallet} from '../redux/actions/actions'
 import { toast } from 'react-toastify';
