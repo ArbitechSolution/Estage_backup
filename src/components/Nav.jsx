@@ -21,7 +21,7 @@ export default function Nav() {
       
         <button  className={ notConnected? "btn btn121": "btn btn122"} 
         onClick={getaddress}
-        >{acc ==="No Wallet" ? "Insatll metamask" :acc ==="Connect Wallet" ? acc  : acc ==="Connect to Rinkebey"? acc :acc.substring(0,5) + "..." + acc.substring(acc.length - 5)  }</button>
+        >{acc ==="No Wallet" ? "Insatll metamask" :acc ==="Connect Wallet" ? acc  : acc == process.env.REACT_APP_NETWORK_MESSAGE? acc :acc.substring(0,5) + "..." + acc.substring(acc.length - 5)  }</button>
       
       
     </StyledNav>

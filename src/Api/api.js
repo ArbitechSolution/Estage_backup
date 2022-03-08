@@ -85,7 +85,7 @@ export const loadAccountAddress = async () => {
         let accounts = await getAccounts();
         return accounts[0];
       } else {
-        let res = "Connect to Rinkebey";
+        let res = process.env.REACT_APP_NETWORK_MESSAGE;
         return res;
       }
     } else {

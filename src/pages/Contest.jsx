@@ -31,6 +31,7 @@ const webSupply = new Web3(
 );
 
 export default function Contest() {
+  const baseURL = process.env.REACT_APP_BSE_URL
   const { contestId } = useParams();
   let [showProfile, setShowProfile] = useState(false);
   let [showButton, setShowButton] = useState(true);
@@ -43,13 +44,16 @@ export default function Contest() {
   let [isDel, setIsDel]=useState(false);
   let [delNominate, setDelNominate]=useState()
   let [updated, setUpdated] = useState(true)
+  let [isChangeNominateBtn, setIsChangeNominateBtn] = useState(true);
+  let [nominateAddress, setNominateAddress]=useState();
   let navigate = useNavigate();
   let dispatch = useDispatch()
   let {acc} = useSelector(state =>state.connectWallet);
   let {cycle_id} = useSelector(state => state.setCycleId)
   let profile = useSelector(state => state.setProfileData)
+  console.log("profile", profile);
   const disableButton = () => {
-    if(acc == "No Wallet" || acc == "Connect to Rinkebey" || acc ==="Connect Wallet"){
+    if(acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE || acc ==="Connect Wallet"){
       setNomiBtn(true)
     }else{
       setNomiBtn(false);
@@ -57,7 +61,7 @@ export default function Contest() {
   }
   const fetchApi = async () => {
     
-    if (acc == "No Wallet" || acc == "Connect to Rinkebey" || acc ==="Connect Wallet") {
+    if (acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE || acc ==="Connect Wallet") {
       
     } else {
       try {
@@ -65,18 +69,17 @@ export default function Contest() {
         let web3 = window.web3;
         let contractOf = new web3.eth.Contract(contractAbi, contractAddress);
         let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
-
         let alreadyVoted = await contractOf.methods
           .hasVotedForCreator(acc, cycle_id)
           .call();
-          let res =await axios.get(`https://defi-voting3.herokuapp.com/api/v2/votes/isVoted?address=${acc}&cycle_id=${cycle_id}`);
-
+          let res =await axios.get(`${baseURL}/votes/isVoted?address=${acc}&cycle_id=${cycle_id}`);
         if (alreadyVoted || res.data.message) {
           setDisabledbtn(true);
         } else {
           setDisabledbtn(false);
         }
       } catch (e) {
+        setDisabledbtn(false);
         console.log("Error While Checking has voted for Creator ", e);
       }
     }    
@@ -86,9 +89,10 @@ export default function Contest() {
       let contractOf = new webSupply.eth.Contract(contractAbi, contractAddress);
 
       let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
+      console.log("cycle_id", cycle_id);
       await axios
         .get(
-          `https://defi-voting3.herokuapp.com/api/v2/nominations/getNominationData?cycle_id=${cycle_id}`
+          `${baseURL}/nominations/getNominationData?cycle_id=${cycle_id}`
         )
         .then((response) => {
           let myrequiredData = response.data.data;
@@ -109,8 +113,8 @@ export default function Contest() {
     setVoteModal(false);
     if (acc == "No Wallet") {
       toast.error("No wallet Connected");
-    } else if (acc == "Connect to Rinkebey") {
-      toast.error("Please Connect to Connect to Rinkebey");
+    } else if (acc == process.env.REACT_APP_NETWORK_MESSAGE) {
+      toast.error(process.env.REACT_APP_NETWORK_MESSAGE);
     } else {
       let web3 = window.web3;
         let contractOf = new web3.eth.Contract(contractAbi, contractAddress);
@@ -133,7 +137,7 @@ export default function Contest() {
                 transactionHash:receipt.transactionHash,
                 appoloBalance:parseInt(bal)
               }
-              await axios.post("https://defi-voting3.herokuapp.com/api/v2/votes/voteOnChain", data)
+              await axios.post(`${baseURL}/votes/voteOnChain`, data)
               setUpdated(updated = !updated)
             })
 
@@ -184,8 +188,8 @@ export default function Contest() {
       if(acc === "Connect Wallet"){
         toast.error(acc)
       }else{
-      if(acc == "No Wallet" || acc == "Connect to Rinkebey"){
-        toast.error("No Wallet Connected or onnect to Rinkebey")
+      if(acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE){
+        toast.error(`No Wallet Connected or ${process.env.REACT_APP_NETWORK_MESSAGE}`)
       }else{
         const web3 = window.web3;
         let contractOf = new web3.eth.Contract(contractAbi, contractAddress);
@@ -217,8 +221,8 @@ export default function Contest() {
       if(acc === "Connect Wallet"){
         toast.error(acc)
       }else{
-      if(acc == "No Wallet" || acc == "Connect to Rinkebey"){
-        toast.error("No Wallet Connected or onnect to Rinkebey")
+      if(acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE){
+        toast.error(`No Wallet Connected or ${process.env.REACT_APP_NETWORK_MESSAGE}`)
       }else{
         const web3 = window.web3;
         let currentTime = Math.floor(new Date().getTime() / 1000.0);
@@ -241,7 +245,7 @@ export default function Contest() {
           hash:ipfsHash.path,
           appoloBalance:parseInt(opoBal.current.value)
         }
-        let res =await axios.post("https://defi-voting3.herokuapp.com/api/v2/votes/voteOffchain", apiObj);
+        let res =await axios.post(`${baseURL}/votes/voteOffchain`, apiObj);
         setUpdated(updated = !updated)
         setDisabledbtn(true);
         setSignModal(false);
@@ -281,8 +285,8 @@ export default function Contest() {
       if(acc === "Connect Wallet"){
         toast.error(acc)
       }else{
-      if(acc == "No Wallet" || acc == "Connect to Rinkebey"){
-        toast.error("No Wallet Connected or onnect to Rinkebey")
+      if(acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE){
+        toast.error(`No Wallet Connected or ${process.env.REACT_APP_NETWORK_MESSAGE}`)
       }else{
         const web3 = window.web3;
         let contractOf = new web3.eth.Contract(contractAbi, contractAddress);
@@ -291,7 +295,7 @@ export default function Contest() {
           let data = {
             address:delNominate
           }
-          await axios.post("https://defi-voting3.herokuapp.com/api/v2/nominations/delete",data)
+          await axios.post(`${baseURL}/nominations/delete`,data)
           setIsDel(false)
           toast.success("Nomination deleted")
         }else{
@@ -315,12 +319,41 @@ export default function Contest() {
 const closeProfileModal = () =>{
   setShowProfile(false)
 }
+
+  const changeNominateBtn = async() => {
+    try{
+
+      if(acc != "Connect Wallet" && acc != "No Wallet" && acc != process.env.REACT_APP_NETWORK_MESSAGE ){
+        let contractOf = new webSupply.eth.Contract(contractAbi, contractAddress);
+        let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
+        let res =await axios.get(`${baseURL}/nominations/getNominationData?cycle_id=${cycle_id}`);
+        console.log("responce",res.data.data[0].address);
+        console.log("responce",acc);
+       let isAddressEqual = res.data.data.find((items)=>{
+          if(items.address === acc){
+            setNominateAddress(items.address)
+            return true
+          }
+        });
+        if(isAddressEqual == undefined){
+          setIsChangeNominateBtn(true);
+        }else{
+          setIsChangeNominateBtn(false);
+        }
+        console.log("isAddressEqual", isAddressEqual);
+      }
+
+    }catch(e){
+      console.error("error while change nominate button", e);
+    }
+  }
   
 useEffect(() => {
     fetchApi();
     getNominatesData();
     disableButton()
     dispatch(getCycleId());
+    changeNominateBtn()
   }, [acc]);
 
   const [confirmed, setConfirmed] = useState(false);
@@ -502,7 +535,7 @@ useEffect(() => {
         {myApiArray.length <= 0 && <p 
         
         >
-          Be the first to <span className="text-primary" style={{pointer:"cursor"}} disabled={nomiBtn} onClick={checkCycle} >nominate </span> a creator!
+          Be the first to <span className="text-primary nominateText" style={{cursor:"pointer"}} disabled={nomiBtn} onClick={checkCycle} >nominate </span> a creator!
         </p>}
         {myApiArray.map((items, index) => {
           let myUrl = items.links.website;
@@ -567,9 +600,16 @@ useEffect(() => {
           );
         })}
         
+        {
+          isChangeNominateBtn ?
           <button disabled={nomiBtn} className="btn btn-primary"  onClick={() => checkCycle()}>
             Add Nomination
           </button>
+          :
+          <button className="btn btn-primary"  onClick={() => openProfileModal(nominateAddress)}>
+           Nomination Profile
+          </button>
+        }
       
      
       </div>
@@ -671,6 +711,9 @@ const StyledContest = styled.main`
     button {
       width: auto;
       margin-top: 0;
+    }
+    .nominateText{
+      cursor:pointer
     }
   }
 `;

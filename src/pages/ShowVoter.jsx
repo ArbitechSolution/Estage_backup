@@ -2,7 +2,7 @@ import React,{useState, useEffect} from 'react'
 import {FiChevronRight} from 'react-icons/fi';
 import {FiChevronLeft} from 'react-icons/fi';
 import {useSelector, useDispatch} from 'react-redux';
-import {getOfChainVote, getCycleId, getWallet} from '../redux/actions/actions'
+import {getOfChainVote, getOnChainVote,getCycleId, getWallet} from '../redux/actions/actions'
 import axios from 'axios'
 import styled from "styled-components";
 import {Table} from 'react-bootstrap'
@@ -15,8 +15,8 @@ import {
 import Web3 from 'web3';
 const webSupply = new Web3("https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161");
 const ShowVoter = ({updated}) => {
-    const[listOfVotes, setListOfVotes] = useState(['test']);
-    let [voterData, showVoterData]=useState([]);
+  const baseURL = process.env.REACT_APP_BSE_URL
+
     let [onVoterData, showOnVoterData] = useState([]);
     let [isVote, setIsVote]=useState(true);
     let [onVoteLength, setOnVoteLength]=useState(0)
@@ -24,13 +24,15 @@ const ShowVoter = ({updated}) => {
     let [onVoteEndLimit, setOnVoteEndLimit]=useState(10)
     let [ofVoteStartLimit, setOfVoteStartLimit]=useState(0);
     let [ofVoteEndLimit, setOfVoteEndLimit]=useState(10)
-    let [ofVoteLength, setOfVoteLength]=useState(0)
 
   let dispatch = useDispatch();
   let {acc} = useSelector((state => state.connectWallet))
   let {cycle_id} = useSelector(state => state.setCycleId)
+  let {ofVoterData} = useSelector(state => state.getOfVotes);
+  console.log("ofVotesList", ofVoterData.length);
+  let {onVoteData} = useSelector(state => state.setOnVoteList)
+  console.log("onVoteData", onVoteData);
     const getData = async () => {
-      // dispatch(getCycleId())
         try{
             let contractOf = new webSupply.eth.Contract(contractAbi, contractAddress);
             let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
@@ -39,22 +41,13 @@ const ShowVoter = ({updated}) => {
             console.error("error while get data", e);
         }
     }
-    const getOfVoterData = async () => {
-      try{
-        let contractOf = new webSupply.eth.Contract(contractAbi, contractAddress);
-        let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
-        let res = await axios.get(`https://defi-voting3.herokuapp.com/api/v2/votes/getAllOffchainVotes?cycle_id=${cycle_id}`)
-        showVoterData(res.data.data);
-        setOfVoteLength(res.data.data.length)
-      }catch(e){
-        console.error("error while voter data", e);
-      }
-    } 
+ 
     const getOnVoteData = async () => {
       try{
         let contractOf = new webSupply.eth.Contract(contractAbi, contractAddress);
         let cycle_id = await contractOf.methods.currentVotingCycleEnd().call();
-        let res = await axios.get(`https://defi-voting3.herokuapp.com/api/v2/votes/getAllOnChainVotes?cycle_id=${cycle_id}`)
+        dispatch(getOnChainVote(cycle_id));
+        let res = await axios.get(`${baseURL}/votes/getAllOnChainVotes?cycle_id=${cycle_id}`)
         setOnVoteLength(res.data.data.length)
         showOnVoterData(res.data.data)
       }catch(e){
@@ -62,7 +55,7 @@ const ShowVoter = ({updated}) => {
       }
     }
     const nextOfVote = () => {
-      if(ofVoteEndLimit <  ofVoteLength){
+      if(ofVoteEndLimit <  ofVoterData.length){
         setOfVoteStartLimit(ofVoteEndLimit);
         setOfVoteEndLimit(ofVoteEndLimit+1)
       }
@@ -92,8 +85,6 @@ const ShowVoter = ({updated}) => {
       setIsVote(false)
     }
     useEffect(()=>{
-      
-      getOfVoterData()
       getOnVoteData()
         getData()
 
@@ -133,7 +124,7 @@ const ShowVoter = ({updated}) => {
   </tr>
   </thead>
 {
-  voterData?.slice(ofVoteStartLimit, ofVoteEndLimit).map((list,index)=> {
+  ofVoterData?.slice(ofVoteStartLimit, ofVoteEndLimit).map((list,index)=> {
     let hashNum = list.hash
     hashNum =hashNum.substring(0,4)+"..."+hashNum.substring(hashNum?.length -4)
     return (
@@ -153,13 +144,13 @@ const ShowVoter = ({updated}) => {
       </Table>
       <div className="text-center"> 
 
-      <FiChevronLeft className={ofVoteEndLimit+1 > voterData.length? "fs-1 text-primary": "fs-1 text-light"} 
+      <FiChevronLeft className={ofVoteEndLimit+1 > ofVoterData.length? "fs-1 text-primary": "fs-1 text-light"} 
       onClick={preOfVote}
       />
       <span className="text-primary p-2 m-2 fs-5">
-      {ofVoteStartLimit} - {ofVoteLength}
+      {ofVoteStartLimit} - {ofVoterData.length}
       </span>
-      <FiChevronRight className={ofVoteStartLimit+1 < ofVoteLength? "fs-1 text-primary": "fs-1 text-light"} 
+      <FiChevronRight className={ofVoteStartLimit+1 < ofVoterData.length? "fs-1 text-primary": "fs-1 text-light"} 
       onClick={nextOfVote}
       />
       </div>

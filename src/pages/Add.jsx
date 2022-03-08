@@ -13,6 +13,7 @@ import Spinner from '../components/spinner/Spinner';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
 
 export default function Add() {
+  const baseURL = process.env.REACT_APP_BSE_URL
 let dispatch = useDispatch();
 let {acc} = useSelector(state => state.connectWallet)
   let nameOfArtist = useRef();
@@ -35,8 +36,8 @@ let {acc} = useSelector(state => state.connectWallet)
     }else{
     if (acc == "No Wallet") {
       toast.error("No wallet Connected")
-    } else if (acc == "Connect to Rinkebey") {
-      toast.error("Please Connect to Rinkeybey")
+    } else if (acc == process.env.REACT_APP_NETWORK_MESSAGE) {
+      toast.error(process.env.REACT_APP_NETWORK_MESSAGE)
     } else {
       setIsLoading(true)
       let web3 = window.web3;
@@ -68,7 +69,7 @@ let {acc} = useSelector(state => state.connectWallet)
             await contractOf.methods.nominate().send({
               from: acc
             })
-           await axios.post("https://defi-voting3.herokuapp.com/api/v2/nominations/add", data)
+           await axios.post(`${baseURL}/nominations/add`, data)
             navigate("/contest/3")
             toast.success("Transaction Confirmed");
             setIsLoading(false)
@@ -76,6 +77,7 @@ let {acc} = useSelector(state => state.connectWallet)
 
             minimumDaoBalance = parseInt(minimumDaoBalance);
             minimumDaoBalance = minimumDaoBalance / 1000000000;
+            setIsLoading(false)
             toast.error(`You Must Hold ${minimumDaoBalance} Appolo Tokens`)
           }
 

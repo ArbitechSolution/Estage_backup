@@ -9,14 +9,14 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import Modal from '../components/Modal'
 import { useDispatch, useSelector } from 'react-redux';
-import { getCycleId } from '../redux/actions/actions'
+import { getCycleId, getPreviousContest, getPreviousVoteSummry } from '../redux/actions/actions'
 import MyTimer from './MyTimer'
 import Spinner from '../components/spinner/Spinner';
-
 import { contractAddress, contractAbi, tokenAddress, tokenAbi } from '../components/Constants/Constant';
 const webSupply = new Web3("https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161");
 
 export default function Home() {
+  const baseURL = process.env.REACT_APP_BSE_URL
   let [isLoading, setIsLoading] = useState(false);
   let [contestSummry, setContestSummry] = useState(false)
   let [winnerLength, setWinnerLength] =useState(0);
@@ -31,6 +31,10 @@ export default function Home() {
 
   let { acc } = useSelector(state => state.connectWallet)
   let dispatch = useDispatch()
+  let {preContest} = useSelector(state => state.previousContest);
+  let {preVoteData} = useSelector(state => state.preVoteSummry);
+
+  console.log("preContest",preVoteData.length && preVoteData[0].ipfsHash);
 
 
   const startCycle = async () => {
@@ -38,10 +42,19 @@ export default function Home() {
       setIsLoading(true);
           const web3 = window.web3;
           const contractOf = new web3.eth.Contract(contractAbi, contractAddress);
-          await contractOf.methods.completeCycle(winnerData.address, winnerData.votes).send(
-            {
-              from: acc
-            })
+          if(winnerData.address&& winnerData.votes)
+          {
+            await contractOf.methods.completeCycle(winnerData.address, winnerData.votes).send(
+              {
+                from: acc
+              })
+          }else{
+            await contractOf.methods.completeCycle("0x1827B98F27A1c6cDFC5f8c7fa3De830Eb7bDfa41",0).send(
+              {
+                from: acc
+              }) 
+          }
+         
           dispatch(getCycleId());
           setIsLoading(false);
       setContestSummry(false);
@@ -56,8 +69,8 @@ export default function Home() {
       if (acc === "Connect Wallet") {
         toast.error(`${acc}`)
       } else {
-        if (acc == "No Wallet" || acc == "Connect to Rinkebey") {
-          toast.error("No Wallet Connected or onnect to Rinkebey")
+        if (acc == "No Wallet" || acc == process.env.REACT_APP_NETWORK_MESSAGE) {
+          toast.error(`No Wallet Connected or ${process.env.REACT_APP_NETWORK_MESSAGE}`)
         } else {
           setIsLoading(true);
           const web3 = window.web3;
@@ -67,6 +80,7 @@ export default function Home() {
             toast.error("Only owner can complete this cycle");
             setIsLoading(false);
           }
+          console.log("cycle_id")
           let cycle_time = await contractOf.methods.currentVotingCycleEnd().call()
           let currentTime = Math.floor(new Date().getTime() / 1000.0);
           let contractTime = cycle_time;
@@ -77,7 +91,7 @@ export default function Home() {
             setIsLoading(false);
           }else{
             console.log("cycle_id", cycle_time)
-            let winerDetail = await axios.get(`https://defi-voting3.herokuapp.com/api/v2/votes/getWinner?cycle_id=${cycle_time}`);
+            let winerDetail = await axios.get(`${baseURL}/votes/getWinner?cycle_id=${cycle_time}`);
                 // if(winerDetail.data)
                 if(winerDetail.data.data.length){
               console.log("winerDetail", winerDetail.data.data[0])
@@ -90,6 +104,10 @@ export default function Home() {
                 setIsLoading(false);
                 setContestSummry(true);
             }else{
+              setWinnrData({
+                address:ownerAddress,
+                votes:0,
+              })
               setContestSummry(true);
             }
             setIsLoading(false);
@@ -110,6 +128,8 @@ export default function Home() {
 
   useEffect(() => {
     dispatch(getCycleId())
+    dispatch(getPreviousContest());
+    dispatch(getPreviousVoteSummry());
   }, [])
   return (
     <StyledHome>
@@ -159,21 +179,30 @@ export default function Home() {
 
         <button className="btn btn-light text-primary " onClick={() => navigate("/contest/3")}><b>Vote Now</b></button>
         <div>
-
-          <button className="btn btn-light text-primary"
-            onClick={openContestSummry}
-          ><b>Complete Cycle</b></button>
+          {
+          preVoteData.length ?   <button className="btn btn-light text-primary"
+          ><b><a href={`https://ipfs.infura.io/ipfs/${preVoteData[0].ipfsHash}`} target="_blank">Previous Vote Cycle Summary</a></b></button>
+          : 
+          <></>
+          }
+        
         </div>
       </div>
       <div className="prev">
-        <h4>Previous contests:</h4>
+        <h4>Previous contests:{preContest.length}</h4>
         <div className="grid">
-          <Accordion title={`Contest #2`} alt>
-            <p>No Data Available</p>
-          </Accordion>
-          <Accordion title={`Contest #1`} alt>
-            <p>No Data Available</p>
-          </Accordion>
+          {
+            preContest?.map((contests,index)=>{
+              
+              return (
+                <Accordion key={contests._id} title={`Contest #${index+1}`} alt>
+                <p>{contests.links.name}</p>
+                <p>{contests.address}</p>
+              </Accordion>
+              )
+            })
+          }
+         
         </div>
       </div>
     </StyledHome>
